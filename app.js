@@ -43,6 +43,10 @@ server.listen(port, () => {
 
 // no authentication required for these routes
 
+app.get('/', function(req, res) {
+  return res.status(200).json({ message: 'Welcome to Express API template' });
+});
+
 app.get('/topics', async (req, res) => {
 
     if (req.query.search) {
