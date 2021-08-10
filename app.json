@@ -1,0 +1,24 @@
+{
+    "name": "SwingSpot - Backend",
+    "description": "Backend for SwingSpot",
+    "website": "",
+    "repository": "https://github.com/alyssadicarlo/softball-forum",
+    "env": {
+        "DB_HOST": {
+            "description": "db hostname",
+            "value": "kashin.db.elephantsql.com"
+        },
+        "DB_NAME": {
+            "description": "db name",
+            "value": "gwqosvwc"
+        },
+        "DB_USER": {
+            "description": "db username",
+            "value": "gwqosvwc"
+        },
+        "DB_PASSWORD": {
+            "description": "db password",
+            "value": "eFC-aa5IiBu8k-sOWtS2k3XWMbHDNZuC"
+        }
+    }
+}
