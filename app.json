@@ -6,19 +6,19 @@
     "env": {
         "DB_HOST": {
             "description": "db hostname",
-            "value": "kashin.db.elephantsql.com"
+            "value": "ec2-54-243-92-68.compute-1.amazonaws.com"
         },
         "DB_NAME": {
             "description": "db name",
-            "value": "gwqosvwc"
+            "value": "dd24k8la1s6hgb"
         },
         "DB_USER": {
             "description": "db username",
-            "value": "gwqosvwc"
+            "value": "rncmihdalwozaz"
         },
         "DB_PASSWORD": {
             "description": "db password",
-            "value": "eFC-aa5IiBu8k-sOWtS2k3XWMbHDNZuC"
+            "value": "9b38ecac8d4444afddb07bfbada918a9596a3ac70eb9191131919f544e72e5cf"
         }
     }
 }
