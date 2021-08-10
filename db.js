@@ -18,6 +18,7 @@ const options = {
     database,
     user,
     password,
+    ssl: true,
     dialectOptions: {
         ssl: {
           require: true,
