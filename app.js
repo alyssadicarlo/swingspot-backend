@@ -2,7 +2,8 @@
 
 const http = require('http');
 const hostname = '127.0.0.1';
-const port = 3333;
+// const port = 3333;
+const port = process.env.PORT || 3000;
 
 const express = require('express');
 const cors = require('cors');
@@ -36,8 +37,8 @@ app.use(express.urlencoded({extended: false}));
 
 const server = http.createServer(app);
 
-server.listen(port, hostname, () => {
-    console.log(`Server is running at http://${hostname}:${port}`);
+server.listen(port, () => {
+    console.log(`Server is running at http://localhost:${port}`);
 });
 
 // no authentication required for these routes
