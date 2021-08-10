@@ -18,13 +18,6 @@ const options = {
     database,
     user,
     password,
-    ssl: true,
-    dialectOptions: {
-        ssl: {
-          require: true,
-          rejectUnauthorized: false // <<<<<<< YOU NEED THIS
-        }
-    },
 };
 
 const db = pgp(options);
