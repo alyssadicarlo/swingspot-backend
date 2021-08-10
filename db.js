@@ -17,7 +17,8 @@ const options = {
     host,
     database,
     user,
-    password
+    password,
+    ssl: true
 };
 
 const db = pgp(options);
