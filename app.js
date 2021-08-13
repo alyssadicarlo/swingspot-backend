@@ -44,7 +44,7 @@ server.listen(port, () => {
 // no authentication required for these routes
 
 app.get('/', function(req, res) {
-  return res.status(200).json({ message: 'Welcome to Express API template' });
+  return res.status(200).json({ message: 'SwingSpot API' });
 });
 
 app.get('/topics', async (req, res) => {
@@ -177,6 +177,11 @@ app.get('/topics/latest', async (req, res) => {
 app.get('/topics/:slug', async (req, res) => {
     const { slug } = req.params;
     try {
+        const addView = await db.result(
+            `UPDATE topics
+            SET views = views + 1
+            WHERE slug='${slug}';`
+        )
         const topic = await db.one(
             `SELECT * FROM topics
             WHERE slug='${slug}'`
@@ -214,10 +219,10 @@ app.post('/topics/add', async (req, res) => {
             VALUES
                 ('${author}', '${author_id}',${topicResponse.id}, '${topic_comment}');`
         )
-        res.status(200);
+        res.sendStatus(200);
     } catch(error) {
         console.error("ERROR: ", error);
-        res.status(500);
+        res.status(500).json(error);
     }
 });
 
@@ -237,10 +242,15 @@ app.post('/comments/add', async (req, res) => {
                 last_post_author='${author}'
             WHERE id=${topic_id}`
         )
-        res.status(200);
+        const addReply = await db.result(
+            `UPDATE topics
+            SET replies = replies + 1
+            WHERE id=${topic_id};`
+        )
+        res.sendStatus(200);
     } catch(error) {
         console.error("ERROR: ", error);
-        res.status(500);
+        res.status(500).json(error);
     }
 
 })
@@ -261,9 +271,14 @@ app.post('/comments/add_quote', async (req, res) => {
                 last_post_author='${author}'
             WHERE id=${topic_id}`
         )
-        res.status(200);
+        const addReply = await db.result(
+            `UPDATE topics
+            SET replies = replies + 1
+            WHERE id=${topic_id};`
+        )
+        res.sendStatus(200);
     } catch(error) {
         console.error("ERROR: ", error);
-        res.status(500);
+        res.status(500).json(error);
     }
 });
