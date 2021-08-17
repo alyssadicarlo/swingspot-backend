@@ -23,15 +23,15 @@ router.get('/', async (req, res) => {
 router.get('/:username', async (req, res) => {
 
     try {
-        const inputUsername = req.body.username;
+        const inputUsername = req.params.username;
 
         const response = await db.one(
             `SELECT * FROM users
             WHERE username='${inputUsername}';`
         )
-        const {id, first_name, last_name, username, email} = response;
+        const {id, first_name, last_name, username, email, picture} = response;
         res.status(200).json({
-            isValid, user_id: id, first_name, last_name, username, email
+            user_id: id, first_name, last_name, username, email, picture
         });
     } catch (error) {
         console.error('ERROR: ', error);
@@ -77,9 +77,9 @@ router.post('/add', async (req, res) => {
         
         const query = `
         INSERT INTO users
-            (first_name, last_name, username, email, password)
+            (first_name, last_name, username, email, password, picture)
         VALUES
-            ('${first_name}','${last_name}', '${username}', '${email}','${hash}') RETURNING id;`;
+            ('${first_name}','${last_name}', '${username}', '${email}','${hash}', 'https://ui-avatars.com/api/?name=${first_name}+${last_name}&background=random') RETURNING id;`;
         const response = await db.one(query);
         res.status(200).json({
             id: response

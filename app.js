@@ -189,16 +189,16 @@ app.post('/topics/add', authenticate, async (req, res) => {
             `INSERT INTO topics
                 (slug, name, author, author_id, last_post_author, topic_comment)
             VALUES
-                ('${slug}', '${newName}', '${author}', '${author_id}','${author}', '${topic_comment}')
+                ('${slug}', '${newName}', '${author}', ${author_id},'${author}', '${topic_comment}')
             RETURNING id;`
         )
         const commentResponse = await db.result(
             `INSERT INTO comments
                 (author, author_id, topic_id, comment_text)
             VALUES
-                ('${author}', '${author_id}',${topicResponse.id}, '${topic_comment}');`
+                ('${author}', ${author_id},${topicResponse.id}, '${topic_comment}');`
         )
-        res.sendStatus(200);
+        res.status(200).json({ success: true });
     } catch(error) {
         console.error("ERROR: ", error);
         res.status(500).json(error);
@@ -213,7 +213,7 @@ app.post('/comments/add', async (req, res) => {
             `INSERT INTO comments
                 (author, author_id, topic_id, comment_text)
             VALUES
-                ('${author}', '${author_id}',${topic_id}, '${comment_text}');`
+                ('${author}', ${author_id},${topic_id}, '${comment_text}');`
         )
         const topicResponse = await db.result(
             `UPDATE topics
@@ -242,7 +242,7 @@ app.post('/comments/add_quote', async (req, res) => {
             `INSERT INTO comments
                 (author, author_id, topic_id, comment_text, quoted_comment, quoted_comment_author)
             VALUES
-                ('${author}', '${author_id}',${topic_id}, '${comment_text}', '${quoted_text}', '${quoted_text_author}');`
+                ('${author}', ${author_id},${topic_id}, '${comment_text}', '${quoted_text}', '${quoted_text_author}');`
         )
         const topicResponse = await db.result(
             `UPDATE topics
