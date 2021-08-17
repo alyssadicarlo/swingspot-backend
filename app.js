@@ -1,36 +1,17 @@
 'use strict';
 
 const http = require('http');
-const hostname = '127.0.0.1';
 const port = 3333;
-// const port = process.env.PORT || 3000;
 
 const express = require('express');
 const cors = require('cors');
 const app = express();
 const db = require('./db');
-
-const jwt = require('express-jwt');
-const jwtAuthz = require('express-jwt-authz');
-const jwksRsa = require('jwks-rsa');
+const authenticate = require('./middlewares/authMiddleware');
 
 require('dotenv').config();
 
 app.use(cors());
-
-const jwtCheck = jwt({
-    secret: jwksRsa.expressJwtSecret({
-        cache: true,
-        rateLimit: true,
-        jwksRequestsPerMinute: 5,
-        jwksUri: 'https://dev-yxxg1id2.us.auth0.com/.well-known/jwks.json'
-    }),
-    audience: process.env.REACT_APP_AUTH0_AUDIENCE,
-    issuer: [`https://${process.env.AUTH0_DOMAIN}/`],
-    algorithms: ['RS256']
-});
-
-const checkScopes = jwtAuthz([ 'read:users' ]);
 
 app.use(express.json());
 app.use(express.urlencoded({extended: false}));
@@ -40,8 +21,6 @@ const server = http.createServer(app);
 server.listen(port, () => {
     console.log(`Server is running at http://localhost:${port}`);
 });
-
-// no authentication required for these routes
 
 app.get('/', function(req, res) {
   return res.status(200).json({ message: 'SwingSpot API' });
@@ -201,7 +180,7 @@ app.get('/topics/:slug', async (req, res) => {
     }
 });
 
-app.post('/topics/add', async (req, res) => {
+app.post('/topics/add', authenticate, async (req, res) => {
     const { slug, name, author, author_id, topic_comment } = req.body;
     const newName = name.replace("'", "''");
 
@@ -247,10 +226,10 @@ app.post('/comments/add', async (req, res) => {
             SET replies = replies + 1
             WHERE id=${topic_id};`
         )
-        res.sendStatus(200);
+        res.status(200).json({ success: true });
     } catch(error) {
         console.error("ERROR: ", error);
-        res.status(500).json(error);
+        res.status(500).json({ success: false, message: error});
     }
 
 })
@@ -276,9 +255,13 @@ app.post('/comments/add_quote', async (req, res) => {
             SET replies = replies + 1
             WHERE id=${topic_id};`
         )
-        res.sendStatus(200);
+        res.status(200).json({ success: true });
     } catch(error) {
         console.error("ERROR: ", error);
-        res.status(500).json(error);
+        res.status(500).json({ success: false, message: error});
     }
 });
+
+const usersController = require('./routes/users');
+
+app.use('/users', usersController);
