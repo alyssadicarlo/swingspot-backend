@@ -40,18 +40,29 @@ app.get('/topics', async (req, res) => {
                 OR lower(name) LIKE '%${lowercase}%';`
             )
             for (let i = 0; i < topics.length; i++) {
+                let comment_data = [];
                 const comments = await db.any(
                     `SELECT * FROM comments
                     WHERE topic_id=${topics[i].id};`
                 )
+                for (let i = 0; i < comments.length; i++) {
+                    const comment_likes = await db.one(
+                        `SELECT count(id) FROM comment_likes
+                        WHERE comment_id=${comments[i].id};`
+                    )
+                    comment_data.push({
+                        comment: comments[i],
+                        likes: parseInt(comment_likes.count)
+                    });
+                }
                 const likes = await db.one(
-                    `SELECT sum(value) FROM likes
+                    `SELECT count(id) FROM topic_likes
                     WHERE topic_id=${topics[i].id};`
                 )
                 response.push({
                     topic_data: topics[i],
-                    vote_count: parseInt(likes.sum),
-                    comments: comments
+                    likes: parseInt(likes.count),
+                    comments: comment_data
                 });
             }
             res.json(response);
@@ -68,18 +79,29 @@ app.get('/topics', async (req, res) => {
                 ORDER BY last_post DESC;`
             )
             for (let i = 0; i < topics.length; i++) {
+                let comment_data = [];
                 const comments = await db.any(
                     `SELECT * FROM comments
                     WHERE topic_id=${topics[i].id};`
                 )
+                for (let i = 0; i < comments.length; i++) {
+                    const comment_likes = await db.one(
+                        `SELECT count(id) FROM comment_likes
+                        WHERE comment_id=${comments[i].id};`
+                    )
+                    comment_data.push({
+                        comment: comments[i],
+                        likes: parseInt(comment_likes.count)
+                    });
+                }
                 const likes = await db.one(
-                    `SELECT sum(value) FROM likes
+                    `SELECT count(id) FROM topic_likes
                     WHERE topic_id=${topics[i].id};`
                 )
                 response.push({
                     topic_data: topics[i],
-                    vote_count: parseInt(likes.sum),
-                    comments: comments
+                    likes: parseInt(likes.count),
+                    comments: comment_data
                 });
             }
             res.json(response);
@@ -100,18 +122,29 @@ app.get('/topics/top', async (req, res) => {
             ORDER BY views DESC;`
         )
         for (let i = 0; i < topics.length; i++) {
+            let comment_data = [];
             const comments = await db.any(
                 `SELECT * FROM comments
                 WHERE topic_id=${topics[i].id};`
             )
+            for (let i = 0; i < comments.length; i++) {
+                const comment_likes = await db.one(
+                    `SELECT count(id) FROM comment_likes
+                    WHERE comment_id=${comments[i].id};`
+                )
+                comment_data.push({
+                    comment: comments[i],
+                    likes: parseInt(comment_likes.count)
+                });
+            }
             const likes = await db.one(
-                `SELECT sum(value) FROM likes
+                `SELECT count(id) FROM topic_likes
                 WHERE topic_id=${topics[i].id};`
             )
             response.push({
                 topic_data: topics[i],
-                vote_count: parseInt(likes.sum),
-                comments: comments
+                likes: parseInt(likes.count),
+                comments: comment_data
             });
         }
         res.json(response);
@@ -130,18 +163,29 @@ app.get('/topics/latest', async (req, res) => {
             ORDER BY last_post DESC;`
         )
         for (let i = 0; i < topics.length; i++) {
+            let comment_data = [];
             const comments = await db.any(
                 `SELECT * FROM comments
                 WHERE topic_id=${topics[i].id};`
             )
+            for (let i = 0; i < comments.length; i++) {
+                const comment_likes = await db.one(
+                    `SELECT count(id) FROM comment_likes
+                    WHERE comment_id=${comments[i].id};`
+                )
+                comment_data.push({
+                    comment: comments[i],
+                    likes: parseInt(comment_likes.count)
+                });
+            }
             const likes = await db.one(
-                `SELECT sum(value) FROM likes
+                `SELECT count(id) FROM topic_likes
                 WHERE topic_id=${topics[i].id};`
             )
             response.push({
                 topic_data: topics[i],
-                vote_count: parseInt(likes.sum),
-                comments: comments
+                likes: parseInt(likes.count),
+                comments: comment_data
             });
         }
         res.json(response);
@@ -169,9 +213,27 @@ app.get('/topics/:slug', async (req, res) => {
             `SELECT * FROM comments
             WHERE topic_id=${topic.id};`
         );
+        const likes = await db.one(
+            `SELECT count(id) FROM topic_likes
+            WHERE topic_id=${topic.id};`
+        )
+        let comment_data = [];
+
+        for (let i = 0; i < comments.length; i++) {
+            const comment_likes = await db.one(
+                `SELECT count(id) FROM comment_likes
+                WHERE comment_id=${comments[i].id};`
+            )
+            comment_data.push({
+                comment: comments[i],
+                likes: parseInt(comment_likes.count)
+            });
+        }
+
         res.json({
             topic_data: topic,
-            comments
+            likes: parseInt(likes.count),
+            comments: comment_data
         });
     } catch (error) {
         res.json({
@@ -179,6 +241,22 @@ app.get('/topics/:slug', async (req, res) => {
         });
     }
 });
+
+app.get('/comments/:comment_id/likes', async (req, res) => {
+    const { comment_id } = req.params;
+
+    try {
+        const response = await db.any(
+            `SELECT * FROM comment_likes
+            WHERE comment_id=${comment_id};`
+        )
+        res.json(response)
+    } catch(error) {
+        res.json({
+            message: error.message
+        })
+    }
+})
 
 app.post('/topics/add', authenticate, async (req, res) => {
     const { slug, name, author, author_id, topic_comment } = req.body;
@@ -261,6 +339,39 @@ app.post('/comments/add_quote', async (req, res) => {
         res.status(500).json({ success: false, message: error});
     }
 });
+
+app.post('/comments/:comment_id/favorite', async (req, res) => {
+    const { comment_id } = req.params;
+    const { username, user_id } = req.body;
+
+    try {
+        const checkIfLiked = await db.any(
+            `SELECT * FROM comment_likes
+            WHERE user_id=${user_id}
+            AND comment_id=${comment_id};`
+        )
+
+        if (checkIfLiked.length === 0) {
+            try {
+                const response = await db.result(
+                    `INSERT INTO comment_likes
+                        (username, user_id, comment_id)
+                    VALUES
+                        ('${username}', ${user_id}, ${comment_id})`
+                );
+        
+                res.status(200).json({ success: true });
+            } catch (error) {
+                res.status(500).json({ success: false, message: error})
+            }
+        } else {
+            res.status(200).json({ success: false });
+        }
+        
+    } catch (error) {
+        res.status(500).json({ success: false });
+    }
+})
 
 const usersController = require('./routes/users');
 

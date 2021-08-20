@@ -82,7 +82,7 @@ router.post('/add', async (req, res) => {
             ('${first_name}','${last_name}', '${username}', '${email}','${hash}', 'https://ui-avatars.com/api/?name=${first_name}+${last_name}&background=random') RETURNING id;`;
         const response = await db.one(query);
         res.status(200).json({
-            id: response
+            response
         });
     } catch (error) {
         console.error('ERROR: ', error);
