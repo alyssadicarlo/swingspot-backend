@@ -119,7 +119,7 @@ app.get('/topics/top', async (req, res) => {
         const response = [];
         const topics = await db.any(
             `SELECT * FROM topics
-            ORDER BY views DESC;`
+            ORDER BY replies DESC;`
         )
         for (let i = 0; i < topics.length; i++) {
             let comment_data = [];
