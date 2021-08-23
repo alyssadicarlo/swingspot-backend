@@ -7,7 +7,7 @@ CREATE TABLE users (
     password text,
     posts integer DEFAULT 0,
     picture text,
-    registered_date date DEFAULT NOW()
+    registered_date timestamp DEFAULT NOW()
 );
 
 CREATE TABLE topics (

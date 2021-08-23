@@ -245,8 +245,9 @@ app.get('/topics/:slug', async (req, res) => {
 app.get('/comments', async (req, res) => {
     try {
         const response = await db.any(
-            `SELECT comments.id, topic_id, comments.author, date_posted, comment_text, quoted_comment, quoted_comment_author, topics.name, topics.slug FROM comments
-            INNER JOIN topics ON topics.id = comments.topic_id
+            `SELECT comments.id, topic_id, comments.author, date_posted, comment_text, quoted_comment, quoted_comment_author, topics.name, topics.slug, users.picture FROM comments
+            JOIN topics ON topics.id = comments.topic_id
+            JOIN users ON comments.author = users.username
             ORDER BY date_posted DESC;`
         );
         res.json(response);

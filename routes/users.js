@@ -12,7 +12,8 @@ function checkPassword(hashedPassword, password) {
 router.get('/', async (req, res) => {
     try {
         const response = await db.any(
-            `SELECT id, first_name, last_name, username, email FROM users;`
+            `SELECT id, first_name, last_name, username, email, registered_date FROM users
+            ORDER BY registered_date DESC;`
         )
         res.status(200).json(response);
     } catch (error) {
@@ -30,14 +31,14 @@ router.get('/:username', async (req, res) => {
             `SELECT * FROM users
             WHERE username='${inputUsername}';`
         )
-        const {id, first_name, last_name, username, email, picture} = response;
+        const {id, first_name, last_name, username, email, picture, registered_date} = response;
         
         res.status(200).json({
-            user_id: id, first_name, last_name, username, email, picture
+            success: true, user_id: id, first_name, last_name, username, email, picture, registered_date
         });
     } catch (error) {
         console.error('ERROR: ', error);
-        res.status(500).json(error);
+        res.status(500).json({success: false, error });
     }
 });
 
@@ -125,41 +126,6 @@ router.post('/update/name', authenticate, async (req, res) => {
     } catch(error) {
         console.error(error);
         res.status(500).json({ success: false, message: error });
-    }
-});
-
-router.post('/update/username', authenticate, async (req, res) => {
-    try {
-        const { username, newUsername } = req.body;
-
-        const token = jwt.sign({
-            username: newUsername
-        }, process.env.SECRET_KEY)
-
-        const response = await db.result(
-            `UPDATE users
-            SET username='${newUsername}'
-            WHERE username='${username}';`
-        )
-
-        res.json({ success: true, token });
-    } catch(error) {
-        res.json({ success: false, message: error });
-    }
-});
-
-router.post('/update/email', authenticate, async (req, res) => {
-    try {
-        const { email, username } = req.body;
-
-        const response = await db.result(
-            `UPDATE users
-            SET email='${email}'
-            WHERE username='${username}';`
-        )
-        res.json({ success: true });
-    } catch(error) {
-        res.json({ success: false, message: error });
     }
 });
 
