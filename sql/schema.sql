@@ -1,3 +1,15 @@
+CREATE TABLE users (
+    id serial PRIMARY KEY,
+    first_name text, 
+    last_name text, 
+    username text UNIQUE,
+    email text UNIQUE,
+    password text,
+    posts integer DEFAULT 0,
+    picture text,
+    registered_date date DEFAULT NOW()
+);
+
 CREATE TABLE topics (
     id serial PRIMARY KEY,
     slug text,

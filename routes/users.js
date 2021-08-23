@@ -3,6 +3,7 @@ const router = express.Router();
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const db = require('../db');
+const authenticate = require('../middlewares/authMiddleware');
 
 function checkPassword(hashedPassword, password) {
     return bcrypt.compareSync(password, hashedPassword)
@@ -30,6 +31,7 @@ router.get('/:username', async (req, res) => {
             WHERE username='${inputUsername}';`
         )
         const {id, first_name, last_name, username, email, picture} = response;
+        
         res.status(200).json({
             user_id: id, first_name, last_name, username, email, picture
         });
@@ -60,33 +62,135 @@ router.post('/login', async (req, res) => {
                 success: isValid, token, username: response.username
             });
         } else {
-            res.json({success: false, message: 'Not authenticated'});
+            res.json({success: false, message: 'Email or password is incorrect'});
         }
     } catch (error) {
-        res.json({ success: false, message: 'User not found'});
+        res.json({ success: false, message: 'Email or password is incorrect'});
     }
 });
 
 router.post('/add', async (req, res) => {
 
+    const { first_name, last_name, username, email, password } = req.body;
+
+    const salt = bcrypt.genSaltSync();
+    const hash = bcrypt.hashSync(password, salt);
+
     try {
-        const { first_name, last_name, username, email, password } = req.body;
-    
-        const salt = bcrypt.genSaltSync();
-        const hash = bcrypt.hashSync(password, salt);
-        
         const query = `
         INSERT INTO users
             (first_name, last_name, username, email, password, picture)
         VALUES
             ('${first_name}','${last_name}', '${username}', '${email}','${hash}', 'https://ui-avatars.com/api/?name=${first_name}+${last_name}&background=random') RETURNING id;`;
         const response = await db.one(query);
-        res.status(200).json({
-            response
-        });
+        res.status(200).json({ success: true });
     } catch (error) {
-        console.error('ERROR: ', error);
-        res.status(500).json(error);
+        console.error(error);
+        res.status(500).json({ success: false, message: "Email already in use" });
+    }
+})
+
+router.post('/update/picture', authenticate, async (req, res) => {
+    try {
+        const { picture, username } = req.body;
+
+        const response = await db.result(
+            `UPDATE users
+            SET picture='${picture}'
+            WHERE username='${username}';`
+        );
+        res.status(200).json({ success: true });
+    } catch(error) {
+        res.status(500).json({ success: false, message: error });
+    }
+});
+
+router.post('/update/name', authenticate, async (req, res) => {
+    try {
+        const { first_name, last_name, username } = req.body;
+
+        const firstNameResponse = await db.result(
+            `UPDATE users
+            SET first_name='${first_name}'
+            WHERE username='${username}';`
+        );
+
+        const lastNameResponse = await db.result(
+            `UPDATE users
+            SET last_name='${last_name}'
+            WHERE username='${username}';`
+        );
+        
+        res.status(200).json({ success: true });
+    } catch(error) {
+        console.error(error);
+        res.status(500).json({ success: false, message: error });
+    }
+});
+
+router.post('/update/username', authenticate, async (req, res) => {
+    try {
+        const { username, newUsername } = req.body;
+
+        const token = jwt.sign({
+            username: newUsername
+        }, process.env.SECRET_KEY)
+
+        const response = await db.result(
+            `UPDATE users
+            SET username='${newUsername}'
+            WHERE username='${username}';`
+        )
+
+        res.json({ success: true, token });
+    } catch(error) {
+        res.json({ success: false, message: error });
+    }
+});
+
+router.post('/update/email', authenticate, async (req, res) => {
+    try {
+        const { email, username } = req.body;
+
+        const response = await db.result(
+            `UPDATE users
+            SET email='${email}'
+            WHERE username='${username}';`
+        )
+        res.json({ success: true });
+    } catch(error) {
+        res.json({ success: false, message: error });
+    }
+});
+
+router.post('/update/password', authenticate, async (req, res) => {
+    try {
+        const { currentPassword, newPassword, username } = req.body;
+
+        const response = await db.one(
+            `SELECT * FROM users
+            WHERE username = '${username}';`
+        );
+
+        const isValid = checkPassword(response.password, currentPassword);
+
+        if (!!isValid) {
+
+            const salt = bcrypt.genSaltSync();
+            const hash = bcrypt.hashSync(newPassword, salt);
+
+            const response = await db.result(
+                `UPDATE users
+                SET password='${hash}'
+                WHERE username='${username}';`
+            );
+
+            res.json({ success: true });
+        } else {
+            res.json({success: false, message: 'Password is not correct'});
+        }
+    } catch(error) {
+        res.json({ success: false, message: error.message });
     }
 })
 

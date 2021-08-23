@@ -242,6 +242,19 @@ app.get('/topics/:slug', async (req, res) => {
     }
 });
 
+app.get('/comments', async (req, res) => {
+    try {
+        const response = await db.any(
+            `SELECT comments.id, topic_id, comments.author, date_posted, comment_text, quoted_comment, quoted_comment_author, topics.name, topics.slug FROM comments
+            INNER JOIN topics ON topics.id = comments.topic_id
+            ORDER BY date_posted DESC;`
+        );
+        res.json(response);
+    } catch(error) {
+        res.status(500).json({message: error});
+    }
+})
+
 app.get('/comments/:comment_id/likes', async (req, res) => {
     const { comment_id } = req.params;
 
@@ -291,7 +304,7 @@ app.post('/comments/add', async (req, res) => {
             `INSERT INTO comments
                 (author, author_id, topic_id, comment_text)
             VALUES
-                ('${author}', ${author_id},${topic_id}, '${comment_text}');`
+                ('${author}', ${author_id}, ${topic_id}, '${comment_text}');`
         )
         const topicResponse = await db.result(
             `UPDATE topics
@@ -374,5 +387,6 @@ app.post('/comments/:comment_id/favorite', async (req, res) => {
 })
 
 const usersController = require('./routes/users');
+const { response } = require('express');
 
 app.use('/users', usersController);
