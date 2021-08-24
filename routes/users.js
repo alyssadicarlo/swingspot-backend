@@ -66,7 +66,7 @@ router.post('/login', async (req, res) => {
             res.json({success: false, message: 'Email or password is incorrect'});
         }
     } catch (error) {
-        res.json({ success: false, message: 'Email or password is incorrect'});
+        res.json({ success: false, message: 'No user found.'});
     }
 });
 
