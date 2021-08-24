@@ -43,10 +43,10 @@ router.get('/:username', async (req, res) => {
 });
 
 router.post('/login', async (req, res) => {
+    const inputEmail = req.body.email;
+    const inputPassword = req.body.password;
     
     try {
-        const inputEmail = req.body.email;
-        const inputPassword = req.body.password;
 
         const response = await db.one(
             `SELECT * FROM users
@@ -66,7 +66,7 @@ router.post('/login', async (req, res) => {
             res.json({success: false, message: 'Email or password is incorrect'});
         }
     } catch (error) {
-        res.json({ success: false, message: 'No user found.'});
+        res.json({ success: false, message: 'No user found.', error: error});
     }
 });
 
